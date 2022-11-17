@@ -10,6 +10,9 @@ const router = (app) => {
   app.get('/getChips', mid.requiresLogin, controllers.Account.getChips);
   app.post('/sendChips', mid.requiresLogin, controllers.Account.addChips)
 
+  app.post('/createSlot', mid.requiresLogin, controllers.Slots.makeSlot);
+  app.get('/getSlots', mid.requiresLogin, controllers.Slots.getSlots);
+
   app.get('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);
   app.post('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.login);
 

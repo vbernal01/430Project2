@@ -21,7 +21,6 @@ const sendPost = async (url, data, handler) => {
     });
 
     const result = await response.json();
-    document.getElementById('domoMessage').classList.add('hidden');
 
     if (result.error) {
         handleError(result.error);

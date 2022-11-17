@@ -18,7 +18,7 @@ const socketSetup = (app) => {
       console.log('a user disconnected');
     });
 
-    socket.on('addSlot', addConnectionSlot);
+    socket.on('renderSlot', addConnectionSlot);
   });
 
   return server;

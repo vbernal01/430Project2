@@ -65,6 +65,7 @@ const DisplayChips = (props) => {
 const handlePot = (e) => {
     e.preventDefault();
 
+
     //first thing we should worry about is socketIO
 }
 
@@ -83,20 +84,37 @@ const SlotDOM = (props) => {
     );
 }
 
-const renderSlot = (userData) => {
-    let newSlot = document.createElement("div");
-    newSlot.setAttribute("class", "slots");
+const loadSlots = async () => {
+    const response = await fetch('/getSlots');
+    const slotData = await response.json();
+    console.log(slotData);
+}
+ 
 
-    let parentDiv = document.getElementById('slots');
-    parentDiv.insertBefore(newSlot, document.getElementById('joinLobby'));
+const renderSlot = async (userData) => {
+    console.log(userData);
+     helper.sendPost('/createSlot', {username: userData.username, id: userData._id, _csrf: userData.csrf}, loadSlots);
 
-    ReactDOM.render(<SlotDOM username={userData.username} id={userData._id} />, newSlot);
+    // let newSlot = document.createElement("div");
+    // newSlot.setAttribute("class", "slots");
+    // let parentDiv = document.getElementById('slots');
+    // parentDiv.insertBefore(newSlot, document.getElementById('joinLobby'));
+
+    // ReactDOM.render(<SlotDOM username={userData.username} id={userData._id} />, newSlot);
+}
+
+const bringToken = async () => {
+    const tokenResponse = await fetch('/getToken');
+    const token = await tokenResponse.json();
+    return token.csrfToken;
 }
 
 const setupSlotSocket = async () => {
     const account = await fetch('/getAcctInfo');
     const acctData = await account.json();
-    socket.emit('addSlot', { username: acctData.username, id: acctData._id });
+
+    let slotToken = await bringToken();
+    socket.emit('renderSlot', { username: acctData.username, id: acctData._id, csrf: slotToken});
 }
 
 const LobbyDOM = () => {
@@ -114,14 +132,13 @@ const LobbyDOM = () => {
 
 
 const init = async () => {
-    const tokenResponse = await fetch('/getToken');
-    const token = await tokenResponse.json();
+   let initToken =  await bringToken();
 
     const chipResponse = await fetch('/getChips');
     const chipData = await chipResponse.json();
 
     ReactDOM.render(
-        <DisplayChips chips={chipData.chips.chips} csrf={token.csrfToken} />,
+        <DisplayChips chips={chipData.chips.chips} csrf={initToken} />,
         document.querySelector('#chipData')
     );
     ReactDOM.render(
@@ -130,7 +147,7 @@ const init = async () => {
 
     socket.on('sendData', renderSlot);
 
-
+    loadSlots();
     //socket.on('addDOM', communityDomoLoading);
     //loadDomosFromServer();
 }
