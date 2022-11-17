@@ -70,8 +70,11 @@ const getChips = (req, res) => {
     return res.json({ chips: docs });
   })
 }
-const addChips = (req, res) => {
-  AccountModel.setChips(req.session.account.username, req.body.chips);
+const addChips =  async (req, res) => {
+ let addedValue =  await AccountModel.setChips(req.session.account.username, req.body.chips);
+  
+ console.log(addedValue);
+ return res.json({newChipValue: addedValue});
 }
 
 

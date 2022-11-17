@@ -9,13 +9,15 @@ const handleChipTransaction = async (e) => {
     for (let option of options) {
         if (option.checked) {
             let chipValue = option.value;
-            await fetch(e.target.action, {
+            let response = await fetch(e.target.action, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({chips: chipValue, _csrf: token }),
+                body: JSON.stringify({ chips: chipValue, _csrf: token }),
             });
+            let chipData = await response.json();
+            ReactDOM.render(<DisplayChips csrf = {token} chips = {chipData.newChipValue}/>, document.getElementById('chipData'));
             break;
         }
     }
@@ -88,7 +90,7 @@ const renderSlot = (userData) => {
     let parentDiv = document.getElementById('slots');
     parentDiv.insertBefore(newSlot, document.getElementById('joinLobby'));
 
-    ReactDOM.render(<SlotDOM username = {userData.username} id = {userData._id} />, newSlot)    ;
+    ReactDOM.render(<SlotDOM username={userData.username} id={userData._id} />, newSlot);
 }
 
 const setupSlotSocket = async () => {
