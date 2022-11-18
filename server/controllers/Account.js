@@ -66,17 +66,13 @@ const getChips = (req, res) => {
       console.log(err);
       return res.status(400).json({ error: 'An error occured! ' });
     }
-
     return res.json({ chips: docs });
   })
 }
 const addChips =  async (req, res) => {
  let addedValue =  await AccountModel.setChips(req.session.account.username, req.body.chips);
-  
- console.log(addedValue);
  return res.json({newChipValue: addedValue});
 }
-
 
 const getAcctInfo = (req, res) =>{    
   return res.json({username: req.session.account.username, id: req.session.account._id })

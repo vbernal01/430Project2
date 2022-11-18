@@ -17,7 +17,7 @@ const handleChipTransaction = async (e) => {
                 body: JSON.stringify({ chips: chipValue, _csrf: token }),
             });
             let chipData = await response.json();
-            ReactDOM.render(<DisplayChips csrf = {token} chips = {chipData.newChipValue}/>, document.getElementById('chipData'));
+            ReactDOM.render(<DisplayChips csrf={token} chips={chipData.newChipValue} />, document.getElementById('chipData'));
             break;
         }
     }
@@ -62,45 +62,56 @@ const DisplayChips = (props) => {
 }
 
 
-const handlePot = (e) => {
+const handlePot = async (e) => {
     e.preventDefault();
 
+    let chipWager = e.target.getElementById('chipWager');
+    let inverseValue = parseInt(chipWager.value);
+    inverseValue = -inverseValue;
 
-    //first thing we should worry about is socketIO
+    let username = e.target.getElementById('username').textContent;
+    let token = await bringToken();
+    helper.sendPost('/sendToPot', {chips: inverseValue, sentUsername: username, _csrf: token}, loadLobby);
+
+   
 }
 
 const SlotDOM = (props) => {
+    const slotNodes = props.slots.map(slot => {
+        return (
+            <form id={slot._id}
+                key={slot._id}
+                onSubmit={handlePot}
+                name={slot._id}
+                action="/addToPot"
+                method="POST"
+            >
+                <label id = "username">{slot.username}</label>
+                <label htmlFor="wager"> Chip Wager: </label>
+                <input id="chipWager" type="number" min="0" name="wager" />
+            </form>
+        )
+    });
+
     return (
-        <form id={props.id}
-            onSubmit={handlePot}
-            name={props.id}
-            action="/addToPot"
-            method="POST"
-        >
-            <label>{props.username}</label>
-            <label htmlFor="wager">Chip Wager: </label>
-            <input id="chipWager" type="number" min="0" name="wager" />
-        </form>
+        <div className="slots">
+            {slotNodes}
+        </div>
     );
 }
 
-const loadSlots = async () => {
-    const response = await fetch('/getSlots');
-    const slotData = await response.json();
-    console.log(slotData);
+const loadSlots = async (response) => {
+    if (!response || !response.error) {
+        const slotResponse = await fetch('/getSlots');
+        const slotData = await slotResponse.json();
+        ReactDOM.render(<SlotDOM slots={slotData.slots} />, document.getElementById('slots'));
+    }
 }
- 
+
 
 const renderSlot = async (userData) => {
-    console.log(userData);
-     helper.sendPost('/createSlot', {username: userData.username, id: userData._id, _csrf: userData.csrf}, loadSlots);
 
-    // let newSlot = document.createElement("div");
-    // newSlot.setAttribute("class", "slots");
-    // let parentDiv = document.getElementById('slots');
-    // parentDiv.insertBefore(newSlot, document.getElementById('joinLobby'));
-
-    // ReactDOM.render(<SlotDOM username={userData.username} id={userData._id} />, newSlot);
+    helper.sendPost('/createSlot', { username: userData.username, id: userData.id, _csrf: userData._csrf }, loadSlots);
 }
 
 const bringToken = async () => {
@@ -112,38 +123,44 @@ const bringToken = async () => {
 const setupSlotSocket = async () => {
     const account = await fetch('/getAcctInfo');
     const acctData = await account.json();
-
     let slotToken = await bringToken();
-    socket.emit('renderSlot', { username: acctData.username, id: acctData._id, csrf: slotToken});
+    socket.emit('renderSlot', { username: acctData.username, id: acctData.id, _csrf: slotToken });
 }
 
-const LobbyDOM = () => {
+const LobbyDOM = (props) => {
     return (
         <div id="lobby">
             <p>Global Pot placeholder</p>
-            <div id="slots">
+            <div id="globalPot">{props.globalPot}</div>
+            <div id="slotWrapper">
                 <button id="joinLobby" onClick={(e) => {
                     setupSlotSocket();
                 }}>+</button>
+                <div id="slots">
+
+                </div>
             </div>
         </div>
     );
 }
 
+const loadLobby = async (lobbyResponse) => {
+    let lobbyJSON = await lobbyResponse;
+    ReactDOM.render(
+        <LobbyDOM globalPot={lobbyJSON.globalPot} />, document.getElementById('content')
+    );
+}
 
 const init = async () => {
-   let initToken =  await bringToken();
-
+    let initToken = await bringToken();
+    helper.sendPost('/makeLobby', { startingPot: 0, _csrf: initToken }, loadLobby);
     const chipResponse = await fetch('/getChips');
     const chipData = await chipResponse.json();
-
     ReactDOM.render(
         <DisplayChips chips={chipData.chips.chips} csrf={initToken} />,
         document.querySelector('#chipData')
     );
-    ReactDOM.render(
-        <LobbyDOM />, document.getElementById('content')
-    );
+
 
     socket.on('sendData', renderSlot);
 
