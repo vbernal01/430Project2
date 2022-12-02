@@ -5,15 +5,17 @@ const router = (app) => {
   app.get('/getToken', mid.requiresSecure, controllers.Account.getToken);
   app.get('/getAcctInfo', mid.requiresLogin, controllers.Account.getAcctInfo);
 
-
-  app.get('/getChips', mid.requiresLogin, controllers.Account.getChips);
-  app.post('/sendChips', mid.requiresLogin, controllers.Account.addChips)
+  app.post('/getChips', mid.requiresLogin, controllers.Account.getChips);
+  app.post('/sendChips', mid.requiresLogin, controllers.Account.addChips);
 
   app.post('/createSlot', mid.requiresLogin, controllers.Slots.makeSlot);
   app.get('/getSlots', mid.requiresLogin, controllers.Slots.getSlots);
 
   app.post('/makeLobby', mid.requiresLogin, controllers.Lobby.makeLobby);
-  app.post('/sendToPot', mid.requiresLogin, controllers.Lobby.setLobbyPot, controllers.Account.addChips);
+  app.get('/getLobby', mid.requiresLogin, controllers.Lobby.getCurrentLobby);
+
+
+  app.post('/sendToPot', mid.requiresLogin, controllers.Lobby.setLobbyPot);
 
   app.get('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);
   app.post('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.login);

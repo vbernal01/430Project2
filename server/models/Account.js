@@ -78,22 +78,17 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
   }
 };
 
-AccountSchema.statics.setChips = async (sentUsername, chipValue) =>{
-  
-  let foundAccount = await AccountModel.find({username: sentUsername});
-  let addedValue = (parseInt(foundAccount[0].chips) + parseInt(chipValue)); 
+AccountSchema.statics.setChips = async (sentUsername, chipValue) => {
+  const foundAccount = await AccountModel.find({ username: sentUsername });
+  const addedValue = (parseInt(foundAccount[0].chips, 10) + parseInt(chipValue, 10));
   foundAccount[0].chips = addedValue;
-  
+
   foundAccount[0].save();
 
   return addedValue;
-}
-
-AccountSchema.statics.findChips =  async (username, callback) => {
-
-  return await AccountModel.findOne({username}).select('chips').lean().exec(callback);
 };
 
+AccountSchema.statics.findChips = async (username, callback) => await AccountModel.findOne({ username }).select('chips').lean().exec(callback);
 
 AccountModel = mongoose.model('Account', AccountSchema);
 module.exports = AccountModel;

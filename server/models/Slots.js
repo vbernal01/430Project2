@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 let SlotModel = {};
 const SlotSchema = new mongoose.Schema({
- 
+
   bindKey: {
     type: String,
     require: true,

@@ -61,24 +61,24 @@ const signup = async (req, res) => {
 const getToken = (req, res) => res.json({ csrfToken: req.csrfToken() });
 
 const getChips = (req, res) => {
-  AccountModel.findChips(req.session.account.username, (err, docs) => {
+
+  const sessionUsername = req.body.acctUsername;
+  
+  AccountModel.findChips(sessionUsername, (err, docs) => {
     if (err) {
       console.log(err);
       return res.status(400).json({ error: 'An error occured! ' });
     }
-    return res.json({ chips: docs });
-  })
-}
-const addChips =  async (req, res) => {
- let addedValue =  await AccountModel.setChips(req.session.account.username, req.body.chips);
- return res.json({newChipValue: addedValue});
-}
+    let chipValue = docs.chips;
+    return res.json({ chips: chipValue, username: sessionUsername});
+  });
+};
+const addChips = async (req, res) => {
+  const addedValue = await AccountModel.setChips(req.session.account.username, req.body.chips);
+  return res.json({ chipValue: addedValue, username: req.session.account.username });
+};
 
-const getAcctInfo = (req, res) =>{    
-  return res.json({username: req.session.account.username, id: req.session.account._id })
-}
-
-
+const getAcctInfo = (req, res) => res.json({ username: req.session.account.username, id: req.session.account._id });
 
 module.exports = {
   loginPage,
@@ -88,5 +88,5 @@ module.exports = {
   getToken,
   getChips,
   getAcctInfo,
-  addChips
+  addChips,
 };

@@ -10,19 +10,20 @@ const LobbySchema = new mongoose.Schema({
   },
 });
 
-LobbyModel = mongoose.model('Lobby', LobbySchema);
 
 LobbySchema.statics.setPot = async (chipValue) => {
-
-  let lobby = await LobbyModel.find({});
-  let newPotAmount = (parseInt(lobby[0].globalPot) + parseInt(chipValue));
+  const lobby = await LobbyModel.find({});
+  const newPotAmount = (parseInt(lobby[0].globalPot, 10) + parseInt(chipValue, 10));
   lobby[0].globalPot = newPotAmount;
- 
-  return chipValue;
-}
+  await lobby[0].save();
 
-LobbySchema.statics.getLobby = async () =>{
-  let lobby = await LobbyModel.find({});
+  return newPotAmount;
+};
+
+LobbySchema.statics.getLobby = async () => {
+  const lobby = await LobbyModel.find({});
   return lobby;
-}
+};
+
+LobbyModel = mongoose.model('Lobby', LobbySchema);
 module.exports = LobbyModel;
