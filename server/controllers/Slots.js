@@ -9,7 +9,6 @@ const makeSlot = async (req, res) => {
     bindKey: req.body.id,
     username: req.body.username,
   };
-
   try {
     const newSlot = new Slots(slotData);
     await newSlot.save();

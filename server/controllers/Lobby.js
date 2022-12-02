@@ -5,20 +5,19 @@ const LobbyModel = require('../models/Lobby');
 const { Lobby } = models;
 
 const setInverse = (number) => {
-  let sign = Math.sign(number);
+  const sign = Math.sign(number);
 
-  if(sign === 1){
+  if (sign === 1) {
     return -number;
   }
-  else{
-    return Math.abs(number);
-  }
-}
+
+  return Math.abs(number);
+};
 
 const setLobbyPot = async (req, res) => {
   let { chips } = req.body;
-  let orgValue = parseInt(chips, 10);
-  let inverseValue = setInverse(orgValue);
+  const orgValue = parseInt(chips, 10);
+  const inverseValue = setInverse(orgValue);
   chips = inverseValue;
   const newGlobalPot = await LobbyModel.setPot(chips);
   return res.json({ globalPot: newGlobalPot });

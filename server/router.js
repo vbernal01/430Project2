@@ -14,7 +14,6 @@ const router = (app) => {
   app.post('/makeLobby', mid.requiresLogin, controllers.Lobby.makeLobby);
   app.get('/getLobby', mid.requiresLogin, controllers.Lobby.getCurrentLobby);
 
-
   app.post('/sendToPot', mid.requiresLogin, controllers.Lobby.setLobbyPot);
 
   app.get('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);

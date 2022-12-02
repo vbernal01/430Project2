@@ -61,16 +61,15 @@ const signup = async (req, res) => {
 const getToken = (req, res) => res.json({ csrfToken: req.csrfToken() });
 
 const getChips = (req, res) => {
-
   const sessionUsername = req.body.acctUsername;
-  
+
   AccountModel.findChips(sessionUsername, (err, docs) => {
     if (err) {
       console.log(err);
       return res.status(400).json({ error: 'An error occured! ' });
     }
-    let chipValue = docs.chips;
-    return res.json({ chips: chipValue, username: sessionUsername});
+    const chipValue = docs.chips;
+    return res.json({ chips: chipValue, username: sessionUsername });
   });
 };
 const addChips = async (req, res) => {
