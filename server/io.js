@@ -13,6 +13,10 @@ const updateGlobalPot = (lobbyData) => {
   io.emit('sendUpdatedPot', lobbyData);
 };
 
+const updateSlotDOM = (slotData) => {
+  io.emit('sendSlotData', slotData);
+};
+
 const socketSetup = (app) => {
   const server = http.createServer(app);
   io = new Server(server);
@@ -27,6 +31,8 @@ const socketSetup = (app) => {
 
 
     socket.on('renderLobby', updateGlobalPot);
+
+    socket.on('reRenderSlots', updateSlotDOM );
   });
 
   return server;
