@@ -12,7 +12,12 @@ const LobbySchema = new mongoose.Schema({
 
 LobbySchema.statics.setPot = async (chipValue) => {
   const lobby = await LobbyModel.find({});
-  const newPotAmount = (parseInt(lobby[0].globalPot, 10) + parseInt(chipValue, 10));
+
+  let newPotAmount = (parseInt(lobby[0].globalPot, 10) + parseInt(chipValue, 10));
+  
+  if(newPotAmount < 0){
+    newPotAmount = 0;
+  }
   lobby[0].globalPot = newPotAmount;
   await lobby[0].save();
 

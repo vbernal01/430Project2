@@ -17,18 +17,31 @@ const handleChipTransaction = async (e) => {
                 body: JSON.stringify({ chips: chipValue, _csrf: token }),
             });
             let chipData = await response.json();
-            ReactDOM.render(<DisplayChips csrf={token} chips={chipData.newChipValue} />, document.getElementById('chipData'));
+            ReactDOM.render(<DisplayChips csrf={token} chips={chipData.newChipValue} username={chipData.username} />, document.getElementById('chipData'));
             break;
         }
     }
 
 }
+const setupLobby = async () => {
+    const lobbyResponse = await fetch('/getLobby');
+    const lobbyData = await lobbyResponse.json();
+    if (lobbyData.length < 1) {
+        helper.sendPost('/makeLobby', { startingPot: 0, _csrf: token }, loadLobby);
+    }
+    else {
+        loadLobby(lobbyData[0]);
+    }
+    loadSlots();
+
+}
+
 
 const DisplayTransactions = (props) => {
 
     return (
         <div id="transactionPage">
-            <button id="backButton" onClick={(e) => ReactDOM.render(<LobbyDOM />, document.getElementById('content'))}>Back to Lobby</button>
+            <button id="backButton" onClick={(e) => setupLobby()}>Back to Lobby</button>
             <form id="chipStore"
                 onSubmit={handleChipTransaction}
                 name="chipStore"
@@ -54,7 +67,8 @@ const DisplayTransactions = (props) => {
 
 const DisplayChips = (props) => {
     return (
-        <div id="currency" className="navlink">
+        <div id="currency">
+            <p id="name">Welcome {props.username}</p>
             <div id="currency">Chips: {props.chips}</div>
             <div id="navToTransactions" onClick={(e) => ReactDOM.render(<DisplayTransactions csrf={props.csrf} />, document.querySelector("#content"))}>Get more Chips</div>
         </div>
@@ -63,27 +77,40 @@ const DisplayChips = (props) => {
 
 const checkAndStartCountdown = async (e) => {
     let slots = document.querySelectorAll(".slots")
-    // for(let slot of slots){
-    //     let submitButton = slot.querySelector("#wagerButton");
-    //     if(!submitButton.disabled){
-    //         return false;
-    //     }
-    // }
+    for (let slot of slots) {
+        let submitButton = slot.querySelector("#wagerButton");
+        if (!submitButton.disabled) {
+            return false;
+        }
+    }
     let countdownDom = document.querySelector("#countdown");
-
+    let winnerDom = document.querySelector("#winner");
+    winnerDom.textContent = " ";
     const countdownInter = setInterval(countdown, 1000)
     let startTime = 5;
-    function countdown() {
+    async function countdown() {
         if (startTime === 0) {
             clearInterval(countdownInter);
-
             let randomSlotIndex = Math.floor(Math.random() * slots.length);
             let chosenSlot = slots[randomSlotIndex].querySelector("#username");
+             winnerDom.textContent = chosenSlot.textContent + " has won the whole pot!";
+            let lobbyResponse = await fetch('/getLobby');
+            let lobbyData = await lobbyResponse.json();
+            let token = await bringToken();
+            helper.sendPost('/sendToPot', { chips: lobbyData[0].globalPot, sentUsername: chosenSlot.textContent, _csrf: token }, lobbyRender);
 
+            let acctResponse = await fetch('/getAcctInfo');
+            let acctData = await acctResponse.json();
+            console.log(acctData.username, chosenSlot.textContent);
+            if (acctData.username === chosenSlot.textContent) {
+                helper.sendPost('/sendChips', { chips: lobbyData[0].globalPot, sentUsername: chosenSlot.textContent, _csrf: token }, loadChips);
+            }
 
-            countdownDom.textContent = chosenSlot.textContent + " has won the whole pot!";
-
-
+            for (let slot of slots) {
+                let submitButton = slot.querySelector("#wagerButton");
+                submitButton.disabled = false;
+                submitButton.style.opacity = "100%";
+            }
         }
         countdownDom.textContent = 'Every Player is ready! Starting game in ' + startTime + ' seconds.';
         startTime--;
@@ -113,30 +140,40 @@ const getChips = async (username, token) => {
 }
 
 const loadChips = async (acctObj) => {
-    ReactDOM.render(
-        <DisplayChips chips={acctObj.chipValue} acctUsername={acctObj.username} />,
-        document.querySelector('#chipData')
-    );
+    let acctResponse = await fetch('/getAcctInfo');
+    let acctData = await acctResponse.json();
+
+    if (acctData.username === acctObj.username) {
+        ReactDOM.render(
+            <DisplayChips chips={acctObj.chipValue} username={acctObj.username} />,
+            document.querySelector('#chipData')
+        );
+    }
+
+
 
 }
 
 const handlePot = async (e) => {
     e.preventDefault();
+
     let chipWager = e.target.querySelector('#chipWager').value;
-    let inverseValue = parseInt(chipWager, 10);
-    inverseValue = -inverseValue;
-    let username = document.getElementById('username').textContent;
+    let slotUsername = e.target.querySelector('#username').textContent;
+    
+    const sessionAcctResponse = await fetch('/getAcctInfo');
+    const sessionAcctData = await sessionAcctResponse.json();
     let token = await bringToken();
+    let chipBalance = await getChips(slotUsername, token);
 
-    helper.sendPost('/sendToPot', { chips: inverseValue, sentUsername: username, _csrf: token }, lobbyRender);
-
-    helper.sendPost('/sendChips', { chips: inverseValue, sentUsername: username, _csrf: token }, loadChips);
-
-   
-
-    let thisSlotName = e.target.id;
-    socket.emit('reRenderSlots', {updatedSlot: thisSlotName, wagerAmount: chipWager});
-
+    //If the wager is less than the balance, and also the username of the session is the same as the slot 
+    if (chipWager <= chipBalance && slotUsername === sessionAcctData.username) {
+        let inverseValue = parseInt(chipWager, 10);
+        inverseValue = -inverseValue;
+        helper.sendPost('/sendToPot', { chips: inverseValue, sentUsername: slotUsername, _csrf: token }, lobbyRender);
+        helper.sendPost('/sendChips', { chips: inverseValue, sentUsername: slotUsername, _csrf: token }, loadChips);
+        let thisSlotName = e.target.id;
+        socket.emit('reRenderSlots', { updatedSlot: thisSlotName, wagerAmount: chipWager });
+    }
 }
 
 const SlotDOM = (props) => {
@@ -166,14 +203,14 @@ const SlotDOM = (props) => {
 }
 
 const updateSlots = (socketData) => {
-    
+
     let selectedSlot = document.getElementById(socketData.updatedSlot);
     let submitButton = selectedSlot.querySelector("#wagerButton");
     submitButton.disabled = true;
     submitButton.style.opacity = "50%";
 
     selectedSlot.querySelector("#chipWager").value = socketData.wagerAmount;
-    //checkAndStartCountdown()
+    checkAndStartCountdown()
 
 }
 
@@ -213,6 +250,7 @@ const LobbyDOM = (props) => {
 
                 </div>
                 <p id="countdown"></p>
+                <p id = "winner"></p>
             </div>
         </div>
     );
@@ -227,6 +265,7 @@ const setupSlotSocket = async () => {
 }
 
 
+
 const init = async () => {
     socket.on('sendUpdatedPot', loadLobby);
 
@@ -235,21 +274,12 @@ const init = async () => {
     socket.on('sendSlotData', updateSlots);
     let token = await bringToken();
 
-    const lobbyResponse = await fetch('/getLobby');
-    const lobbyData = await lobbyResponse.json();
-    if (lobbyData.length < 1) {
-        helper.sendPost('/makeLobby', { startingPot: 0, _csrf: token }, loadLobby);
-    }
-    else {
-        loadLobby(lobbyData[0]);
-    }
-
+    await setupLobby();
     const acctResponse = await fetch('/getAcctInfo');
     const acctData = await acctResponse.json();
     const sessionUsername = acctData.username;
     let acctChipValue = await getChips(sessionUsername, token);
     loadChips({ username: sessionUsername, chipValue: acctChipValue });
-    loadSlots();
 
 }
 
