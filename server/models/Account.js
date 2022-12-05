@@ -81,8 +81,8 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
 AccountSchema.statics.setChips = async (sentUsername, chipValue) => {
   const foundAccount = await AccountModel.find({ username: sentUsername });
   let addedValue = (parseInt(foundAccount[0].chips, 10) + parseInt(chipValue, 10));
-  
-  if(addedValue < 0){
+
+  if (addedValue < 0) {
     addedValue = 0;
   }
 

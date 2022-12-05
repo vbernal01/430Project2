@@ -21,6 +21,14 @@ const makeSlot = async (req, res) => {
   }
 };
 
+const removeSlot = async (req, res) => {
+  let sessionUsername = req.session.account.username;
+  const foundSlot = await SlotModel.find({ username: sessionUsername});
+  const deletedResponse = await SlotModel.deleteOne({username: sessionUsername});
+  return res.json({username: req.session.account.username});
+}
+
+
 const getSlots = async (req, res) => {
   SlotModel.find({}, (err, docs) => {
     if (err) {
@@ -31,4 +39,4 @@ const getSlots = async (req, res) => {
   });
 };
 
-module.exports = { makeSlot, getSlots };
+module.exports = { makeSlot, getSlots, removeSlot };

@@ -8,7 +8,6 @@ const addConnectionSlot = (userData) => {
   io.emit('sendData', userData);
 };
 
-
 const updateGlobalPot = (lobbyData) => {
   io.emit('sendUpdatedPot', lobbyData);
 };
@@ -16,6 +15,11 @@ const updateGlobalPot = (lobbyData) => {
 const updateSlotDOM = (slotData) => {
   io.emit('sendSlotData', slotData);
 };
+
+const removeSlotDOM = (slotData) => {
+  io.emit('removeSlot', slotData)
+}
+
 
 const socketSetup = (app) => {
   const server = http.createServer(app);
@@ -29,10 +33,11 @@ const socketSetup = (app) => {
 
     socket.on('renderSlot', addConnectionSlot);
 
-
     socket.on('renderLobby', updateGlobalPot);
 
-    socket.on('reRenderSlots', updateSlotDOM );
+    socket.on('reRenderSlots', updateSlotDOM);
+
+    socket.on('takeSlot', removeSlotDOM);
   });
 
   return server;

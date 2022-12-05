@@ -93,7 +93,7 @@ const checkAndStartCountdown = async (e) => {
             clearInterval(countdownInter);
             let randomSlotIndex = Math.floor(Math.random() * slots.length);
             let chosenSlot = slots[randomSlotIndex].querySelector("#username");
-             winnerDom.textContent = chosenSlot.textContent + " has won the whole pot!";
+            winnerDom.textContent = chosenSlot.textContent + " has won the whole pot!";
             let lobbyResponse = await fetch('/getLobby');
             let lobbyData = await lobbyResponse.json();
             let token = await bringToken();
@@ -159,7 +159,7 @@ const handlePot = async (e) => {
 
     let chipWager = e.target.querySelector('#chipWager').value;
     let slotUsername = e.target.querySelector('#username').textContent;
-    
+
     const sessionAcctResponse = await fetch('/getAcctInfo');
     const sessionAcctData = await sessionAcctResponse.json();
     let token = await bringToken();
@@ -179,7 +179,7 @@ const handlePot = async (e) => {
 const SlotDOM = (props) => {
     const slotNodes = props.slots.map(slot => {
         return (
-            <form id={slot._id}
+            <form id={slot.username}
                 className="slots"
                 key={slot._id}
                 onSubmit={handlePot}
@@ -246,22 +246,49 @@ const LobbyDOM = (props) => {
                 <button id="joinLobby" onClick={(e) => {
                     setupSlotSocket();
                 }}>Join this Lobby</button>
+
+                <button id="leaveLobby" onClick={(e) => {
+                    leaveCurrentSlot();
+                }}>Leave this Lobby</button>
+
                 <div id="slotContainer">
 
                 </div>
                 <p id="countdown"></p>
-                <p id = "winner"></p>
+                <p id="winner"></p>
             </div>
         </div>
     );
+}
+
+const getSessionAcctInfo = async () => {
+    const acctResponse = await fetch('/getAcctInfo');
+    const acctData = await acctResponse.json();
+    return acctData.username;
+
+
+}
+
+const leaveLobby = async (slotData) => {
+    let chosenSlot = document.querySelector(`#${slotData.username}`);
+    chosenSlot.parentElement.removeChild(chosenSlot);
+}
+
+
+const leaveCurrentSlot = async () => {
+    let slotResponse = await fetch('/removeSlot');
+    let slotData = await slotResponse.json();
+    socket.emit('takeSlot', {username: slotData.username})
 }
 
 
 const setupSlotSocket = async () => {
     const account = await fetch('/getAcctInfo');
     const acctData = await account.json();
+
+    let sessionUsername = await getSessionAcctInfo()
     let slotToken = await bringToken();
-    socket.emit('renderSlot', { username: acctData.username, id: acctData.id, _csrf: slotToken });
+    socket.emit('renderSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
 }
 
 
@@ -272,12 +299,12 @@ const init = async () => {
     socket.on('sendData', renderSlot);
 
     socket.on('sendSlotData', updateSlots);
-    let token = await bringToken();
 
+    socket.on('removeSlot', leaveLobby);
+    let token = await bringToken();
     await setupLobby();
-    const acctResponse = await fetch('/getAcctInfo');
-    const acctData = await acctResponse.json();
-    const sessionUsername = acctData.username;
+
+    let sessionUsername = await getSessionAcctInfo();
     let acctChipValue = await getChips(sessionUsername, token);
     loadChips({ username: sessionUsername, chipValue: acctChipValue });
 

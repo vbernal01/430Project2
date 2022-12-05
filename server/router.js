@@ -9,6 +9,7 @@ const router = (app) => {
   app.post('/sendChips', mid.requiresLogin, controllers.Account.addChips);
 
   app.post('/createSlot', mid.requiresLogin, controllers.Slots.makeSlot);
+  app.get('/removeSlot', mid.requiresLogin, controllers.Slots.removeSlot);
   app.get('/getSlots', mid.requiresLogin, controllers.Slots.getSlots);
 
   app.post('/makeLobby', mid.requiresLogin, controllers.Lobby.makeLobby);

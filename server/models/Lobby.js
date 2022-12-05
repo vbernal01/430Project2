@@ -14,8 +14,8 @@ LobbySchema.statics.setPot = async (chipValue) => {
   const lobby = await LobbyModel.find({});
 
   let newPotAmount = (parseInt(lobby[0].globalPot, 10) + parseInt(chipValue, 10));
-  
-  if(newPotAmount < 0){
+
+  if (newPotAmount < 0) {
     newPotAmount = 0;
   }
   lobby[0].globalPot = newPotAmount;

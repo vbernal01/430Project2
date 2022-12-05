@@ -73,11 +73,10 @@ const getChips = (req, res) => {
   });
 };
 const addChips = async (req, res) => {
-
   console.log(req.body);
 
   const addedValue = await AccountModel.setChips(req.body.sentUsername, req.body.chips);
-  return res.json({ chipValue: addedValue, username: req.body.sentUsername});
+  return res.json({ chipValue: addedValue, username: req.body.sentUsername });
 };
 
 const getAcctInfo = (req, res) => res.json({ username: req.session.account.username, id: req.session.account._id });
