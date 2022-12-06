@@ -57,6 +57,7 @@ const signup = async (req, res) => {
     return res.status(400).json({ error: 'An error occured' });
   }
 };
+const makerPage = (req, res) => res.render('app');
 
 const getToken = (req, res) => res.json({ csrfToken: req.csrfToken() });
 
@@ -90,4 +91,5 @@ module.exports = {
   getChips,
   getAcctInfo,
   addChips,
+  makerPage,
 };

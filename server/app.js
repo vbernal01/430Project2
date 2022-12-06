@@ -18,7 +18,7 @@ const socketSetup = require('./io.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/DomoMaker';
+const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/IGME430Roulette';
 mongoose.connect(dbURI, (err) => {
   if (err) {
     console.log('Could not connect to database');
@@ -50,7 +50,7 @@ app.use(session({
   store: new RedisStore({
     client: redisClient,
   }),
-  secret: 'Domo Arigato',
+  secret: 'Lomo Arigato',
   resave: true,
   saveUninitialized: true,
   cookie: {

@@ -4,7 +4,6 @@
 */
 const handleError = (message) => {
     document.getElementById('errorMessage').textContent = message;
-    document.getElementById('domoMessage').classList.remove('hidden');
 };
 
 /* Sends post requests to the server using fetch. Will look for various
@@ -57,13 +56,9 @@ const sendChips = async (url, data, handler) => {
     }
 };
 
-const hideError = () => {
-    document.getElementById('domoMessage').classList.add('hidden');
-}
 
 module.exports = {
     handleError,
     sendChips,
-    hideError,
     sendPost
 };

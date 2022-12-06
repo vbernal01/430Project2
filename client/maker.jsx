@@ -26,6 +26,7 @@ const handleChipTransaction = async (e) => {
 const setupLobby = async () => {
     const lobbyResponse = await fetch('/getLobby');
     const lobbyData = await lobbyResponse.json();
+    const token = await bringToken();
     if (lobbyData.length < 1) {
         helper.sendPost('/makeLobby', { startingPot: 0, _csrf: token }, loadLobby);
     }
@@ -214,17 +215,6 @@ const updateSlots = (socketData) => {
 
 }
 
-const loadSlots = async (response) => {
-    const slotResponse = await fetch('/getSlots');
-    const slotData = await slotResponse.json();
-    ReactDOM.render(<SlotDOM slots={slotData.slots} />, document.getElementById('slotContainer'));
-}
-
-const renderSlot = async (userData) => {
-    let shitToken = await bringToken()
-    helper.sendPost('/createSlot', { username: userData.username, id: userData.id, _csrf: shitToken }, loadSlots);
-}
-
 
 const lobbyRender = (lobbyResponse) => {
     socket.emit('renderLobby', lobbyResponse);
@@ -234,6 +224,47 @@ const loadLobby = (lobbyResponse) => {
     ReactDOM.render(
         <LobbyDOM globalPot={lobbyResponse.globalPot} />, document.getElementById('content')
     );
+}
+
+
+const getSessionAcctInfo = async () => {
+    const acctResponse = await fetch('/getAcctInfo');
+    const acctData = await acctResponse.json();
+    return acctData.username;
+
+
+}
+
+const leaveLobby = async (slotData) => {
+    let chosenSlot = document.querySelector(`#${slotData.username}`);
+    chosenSlot.parentElement.removeChild(chosenSlot);
+}
+
+
+const leaveCurrentSlot = async () => {
+    let slotResponse = await fetch('/removeSlot');
+    let slotData = await slotResponse.json();
+    socket.emit('takeSlot', { username: slotData.username })
+}
+
+
+const loadSlots = async (response) => {
+    const slotResponse = await fetch('/getSlots');
+    const slotData = await slotResponse.json();
+    ReactDOM.render(<SlotDOM slots={slotData.slots} />, document.getElementById('slotContainer'));
+}
+
+
+const setupSlotSocket = async () => {
+    const account = await fetch('/getAcctInfo');
+    const acctData = await account.json();
+
+    let sessionUsername = await getSessionAcctInfo()
+    let slotToken = await bringToken();
+
+    helper.sendPost('/createSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
+    socket.emit('renderSlot', {});
+    //socket.emit('renderSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
 }
 
 
@@ -261,42 +292,12 @@ const LobbyDOM = (props) => {
     );
 }
 
-const getSessionAcctInfo = async () => {
-    const acctResponse = await fetch('/getAcctInfo');
-    const acctData = await acctResponse.json();
-    return acctData.username;
-
-
-}
-
-const leaveLobby = async (slotData) => {
-    let chosenSlot = document.querySelector(`#${slotData.username}`);
-    chosenSlot.parentElement.removeChild(chosenSlot);
-}
-
-
-const leaveCurrentSlot = async () => {
-    let slotResponse = await fetch('/removeSlot');
-    let slotData = await slotResponse.json();
-    socket.emit('takeSlot', {username: slotData.username})
-}
-
-
-const setupSlotSocket = async () => {
-    const account = await fetch('/getAcctInfo');
-    const acctData = await account.json();
-
-    let sessionUsername = await getSessionAcctInfo()
-    let slotToken = await bringToken();
-    socket.emit('renderSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
-}
-
-
-
 const init = async () => {
     socket.on('sendUpdatedPot', loadLobby);
 
-    socket.on('sendData', renderSlot);
+    socket.on('sendData', loadSlots);
+
+    //socket.on('sendNewSlot', renderSlot)
 
     socket.on('sendSlotData', updateSlots);
 

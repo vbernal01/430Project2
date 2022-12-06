@@ -4,8 +4,8 @@ const { Server } = require('socket.io');
 
 let io;
 
-const addConnectionSlot = (userData) => {
-  io.emit('sendData', userData);
+const addConnectionSlot = (slotData) => {
+  io.emit('sendData', slotData);
 };
 
 const updateGlobalPot = (lobbyData) => {
@@ -17,9 +17,8 @@ const updateSlotDOM = (slotData) => {
 };
 
 const removeSlotDOM = (slotData) => {
-  io.emit('removeSlot', slotData)
-}
-
+  io.emit('removeSlot', slotData);
+};
 
 const socketSetup = (app) => {
   const server = http.createServer(app);
