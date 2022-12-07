@@ -8,16 +8,23 @@
   <link rel="stylesheet" type="text/css" href="/assets/style.css"/>
 </head>
 <body>
-  <nav><a href="/login"><img id="logo" src="/assets/img/face.png" alt="face logo"/></a>
-    <div class="navlink"><a href="/logout">Log out</a></div>
-  </nav>
-  <section id = "chipData"></section>
-  <section id = "content"></section>
-  
+  <nav class = "level">
+    <div class = "level-left">
+      <a href="/login"><img id="logo" src="/assets/img/dice.png" alt="face logo"/></a>
+      <div id = "displayingUsername">
+      </div>
+    </div>
+    <div class ="level-right">
+          <img id = "chipLogo" src = "/assets/img/chipLogo.png" alt = "chip logo"/>
+          <section id = "chipData"></section>
+          <div id="signout"><a href="/logout">Sign out</a></div>
+    </div>
+  </nav>  
+  <section id = "coinContent"></section>
   <section id="lobbyWrapper"></section>
   
 
     <script src="/socket.io/socket.io.js"></script>
-  <script src="/assets/appBundle.js"></script>
+    <script src="/assets/appBundle.js"></script>
 </body>
 </html>

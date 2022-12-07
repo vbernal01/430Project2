@@ -78,6 +78,7 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
   }
 };
 
+// This is the method in charge of setting the chips a user has.
 AccountSchema.statics.setChips = async (sentUsername, chipValue) => {
   const foundAccount = await AccountModel.find({ username: sentUsername });
   let addedValue = (parseInt(foundAccount[0].chips, 10) + parseInt(chipValue, 10));
@@ -93,7 +94,7 @@ AccountSchema.statics.setChips = async (sentUsername, chipValue) => {
   return addedValue;
 };
 
-AccountSchema.statics.findChips = async (username, callback) => await AccountModel.findOne({ username }).select('chips').lean().exec(callback);
+AccountSchema.statics.findChips = async (username, callback) => AccountModel.findOne({ username }).select('chips').lean().exec(callback);
 
 AccountModel = mongoose.model('Account', AccountSchema);
 module.exports = AccountModel;

@@ -1,14 +1,19 @@
+@import 'bulma.css';
+
+
 html, body {
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    background-color: #339c5d;
+    color:white;
 }
 
 #logo {
-    height: 40px;
-    width: 40;
+    height: 60px;
+    width: 60;
     padding-top: 5px;
     float:left;
     border-radius: 8px;
@@ -16,35 +21,132 @@ html, body {
 
 nav {
     width: 100%;
-    height: 50px;
-    background-color: #55acee;
+    height: 70px;
+    background-color: #3bb76d;
+}
+
+#displayingUsername{
+    padding-left:30px;
+}
+
+.greet{
+    font-size: 18px;
+}
+.name{
+    font-size:20px;
+}
+
+.level-right{
+    margin-right: 10px;
+}
+#currencyDOM{
+    background-color: #339c5d;
+    border:1px solid #339c5d;
+    border-radius: 40%;
+    width:125px;
+    height:50px;
+}
+#currency, #navToTransactions{
+    text-align: center;
+    margin:auto;
+    font-size: 18px;
+}
+#currency{
+    margin-left:50px;
+    z-index:0;
+}
+
+#navToTransactions{
+    margin-left:20px;
+}
+#navToTransactions:hover{
+    opacity:80%;
+}
+
+#chipLogo{
+    z-index:1;
+    position:relative;
+    left:50px;
+    height:55px;
+    width:55px;
+}
+
+#signout, #signout a:visited{
+    margin-left: 20px;
+    color:white;
+}
+
+#signout:hover, #leaveLobby:hover, #joinLobby:hover{
+    opacity: 50%;
+}
+
+
+#leaveLobby, #joinLobby, .slots, .formSubmit, #chipWager, #chipWager::placeholder{
+    background-color: #2a7a4a;
+    color:white;
+}
+
+#leaveLobby, #joinLobby{
+    border: 1px solid #2a7a4a;
+    border-radius: 10%;
+}
+
+#leaveLobby{
+    height:50px;
+    width:150px
+}
+
+#joinLobby{
+    width:100px;
+    height: 200px;
+    text-align: center;
+}
+#pot{
+    margin-left: 25%;
+    background-color: #2a7a4a;
+    font-size: 36px;
+    width:400px;
+    height:400px;
+    text-align: center;
+    border:1px solid #2a7a4a;
+    border-radius: 10%;
+}
+#globalPot, #username, #chipWager::placeholder{
+    color:#ffd700;
+}
+#pileImg{
+    width: 300px;
+    height:200px;
+}
+
+#slotWrapper{
+    margin-top: 20px;
+}
+
+
+
+.slots{
+    margin-left: 10px;
+    margin-right: 10px;
+    height:200px;
+    width:200px;
+    border: 1px solid #2a7a4a;
+    border-radius: 10%;
+}
+
+.slots label, .slots input{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
+#username{
+    margin-bottom: 10px;
+    font-size: 20px;
 }
 
 nav:nth-child(1) {
     padding-left: 25px;
-}
-
-.navlink {
-    padding: 5px;
-    padding-top: 12px;
-    padding-left: 20px;
-    color: white;
-    font-size: 1.3em;
-    float: left;
-}
-
-.navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
-    color: white;
-    text-decoration: none;
-    padding: 5px;
-    border-radius: 4px;
-    background-color: #55acee;
-    transition: background-color 0.4s ease;
-}
-
-.navlink a:hover {
-    transition: background-color 0.8s ease;
-    background-color: #66bdff;
 }
 
 .mainForm {
@@ -75,11 +177,8 @@ nav:nth-child(1) {
     margin-top: 14px;
     font-size: 1.2em;
     width: 100px;
-    background-color: #55acee;
     border-radius: 2px;
-    border-color: #66acee;
     padding: 3px 0px;
-    color: white;
     text-decoration: none;
 }
 
@@ -89,7 +188,7 @@ nav:nth-child(1) {
 
 .formSubmit:hover {
     transition: background-color 0.4s ease;
-    background-color: #338acc;
+    background-color: #ffd700;
 }
 
 #user, #pass, #pass2 {
@@ -102,23 +201,4 @@ nav:nth-child(1) {
 #user:focus, #pass:focus, #pass2:focus {
     outline: none;
     box-shadow: 0px 0px 1px 1px #55acee;
-}
-
-.hidden {
-    display: none;
-}
-
-
-
-#speech {
-    height: 120px;
-    width: 250px;
-    z-index:300;
-}
-
-#errorMessage {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: red;
-    font-style: italic;
 }

@@ -1,7 +1,8 @@
 const helper = require('./helper.js');
 const socket = io();
 
-
+//This function is in charge of sending the amount of the chips the user bought from the chip store
+//This is activated if they choose 'send chips'.
 const handleChipTransaction = async (e) => {
     e.preventDefault();
     let options = e.target.querySelectorAll('.options');
@@ -9,35 +10,16 @@ const handleChipTransaction = async (e) => {
     for (let option of options) {
         if (option.checked) {
             let chipValue = option.value;
-            let response = await fetch(e.target.action, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ chips: chipValue, _csrf: token }),
-            });
-            let chipData = await response.json();
-            ReactDOM.render(<DisplayChips csrf={token} chips={chipData.newChipValue} username={chipData.username} />, document.getElementById('chipData'));
+            let sessionUsername = await getSessionAcctInfo();
+            helper.sendPost('/sendChips', { chips: chipValue, sentUsername: sessionUsername, _csrf: token }, loadChips);
             break;
         }
     }
 
 }
-const setupLobby = async () => {
-    const lobbyResponse = await fetch('/getLobby');
-    const lobbyData = await lobbyResponse.json();
-    const token = await bringToken();
-    if (lobbyData.length < 1) {
-        helper.sendPost('/makeLobby', { startingPot: 0, _csrf: token }, loadLobby);
-    }
-    else {
-        loadLobby(lobbyData[0]);
-    }
-    loadSlots();
 
-}
-
-
+//This is the React DOM that shows the different options for transactions. 
+//When the user clicks 'back to lobby', it loads back the lobby and overrites the store react DOM
 const DisplayTransactions = (props) => {
 
     return (
@@ -66,16 +48,8 @@ const DisplayTransactions = (props) => {
     )
 }
 
-const DisplayChips = (props) => {
-    return (
-        <div id="currency">
-            <p id="name">Welcome {props.username}</p>
-            <div id="currency">Chips: {props.chips}</div>
-            <div id="navToTransactions" onClick={(e) => ReactDOM.render(<DisplayTransactions csrf={props.csrf} />, document.querySelector("#content"))}>Get more Chips</div>
-        </div>
-    )
-}
 
+//This method checks to see if all the users have their bets placed. If they do, we start the game.
 const checkAndStartCountdown = async (e) => {
     let slots = document.querySelectorAll(".slots")
     for (let slot of slots) {
@@ -84,12 +58,18 @@ const checkAndStartCountdown = async (e) => {
             return false;
         }
     }
+
     let countdownDom = document.querySelector("#countdown");
     let winnerDom = document.querySelector("#winner");
     winnerDom.textContent = " ";
+
+
+    //We first begin with doing a timed interval, which will act as a 5 second countdown to choose the winner
     const countdownInter = setInterval(countdown, 1000)
     let startTime = 5;
     async function countdown() {
+
+        //When the timer reaches 0, we stop the timer, choose a random slot from the lobby...
         if (startTime === 0) {
             clearInterval(countdownInter);
             let randomSlotIndex = Math.floor(Math.random() * slots.length);
@@ -98,12 +78,17 @@ const checkAndStartCountdown = async (e) => {
             let lobbyResponse = await fetch('/getLobby');
             let lobbyData = await lobbyResponse.json();
             let token = await bringToken();
+            
+
+            //And remove the chips from the pot
             helper.sendPost('/sendToPot', { chips: lobbyData[0].globalPot, sentUsername: chosenSlot.textContent, _csrf: token }, lobbyRender);
 
             let acctResponse = await fetch('/getAcctInfo');
             let acctData = await acctResponse.json();
             console.log(acctData.username, chosenSlot.textContent);
             if (acctData.username === chosenSlot.textContent) {
+
+                //To return to the winner
                 helper.sendPost('/sendChips', { chips: lobbyData[0].globalPot, sentUsername: chosenSlot.textContent, _csrf: token }, loadChips);
             }
 
@@ -118,6 +103,8 @@ const checkAndStartCountdown = async (e) => {
     }
 
 }
+
+//This is a helper method to quickly get the _csrf token
 const bringToken = async () => {
     const tokenResponse = await fetch('/getToken');
     const token = await tokenResponse.json();
@@ -125,7 +112,7 @@ const bringToken = async () => {
 }
 
 
-
+//This is a helper method to get the chips the specified user has. 
 const getChips = async (username, token) => {
 
     let chipResponse = await fetch('/getChips', {
@@ -140,14 +127,40 @@ const getChips = async (username, token) => {
     return chipData.chips;
 }
 
+
+//This is the react DOM to show the chip balance a user has
+const DisplayChipBalance = (props) => {
+    return (
+        <div id="currencyDOM" className="tile">
+            <div id="currency" className="tile">{props.chips}</div>
+            <div id="navToTransactions" className="tile" onClick={(e) => ReactDOM.render(<DisplayTransactions csrf={props.csrf} />, document.querySelector("#lobbyWrapper"))}>+</div>
+        </div>
+    )
+}
+
+//This is more react DOM to show the username
+const DisplayUsername = (props) => {
+    return (
+        <div>
+            <p className="username greet">Welcome, </p>
+            <p className="username name"><strong>{props.username}</strong></p>
+        </div>
+    )
+}
+
+
+//This method is in charge of rendering the react DOM to the client
 const loadChips = async (acctObj) => {
     let acctResponse = await fetch('/getAcctInfo');
     let acctData = await acctResponse.json();
 
     if (acctData.username === acctObj.username) {
         ReactDOM.render(
-            <DisplayChips chips={acctObj.chipValue} username={acctObj.username} />,
+            <DisplayChipBalance chips={acctObj.chipValue} username={acctObj.username} />,
             document.querySelector('#chipData')
+        );
+        ReactDOM.render(
+            <DisplayUsername username={acctObj.username} />, document.querySelector("#displayingUsername")
         );
     }
 
@@ -155,6 +168,8 @@ const loadChips = async (acctObj) => {
 
 }
 
+
+//This function is called when the user wants to wager a bet.
 const handlePot = async (e) => {
     e.preventDefault();
 
@@ -164,9 +179,13 @@ const handlePot = async (e) => {
     const sessionAcctResponse = await fetch('/getAcctInfo');
     const sessionAcctData = await sessionAcctResponse.json();
     let token = await bringToken();
+
+    //We get the balance from the user, and then add it to the pot, while also removing it from the user
     let chipBalance = await getChips(slotUsername, token);
 
-    //If the wager is less than the balance, and also the username of the session is the same as the slot 
+
+    //Because of SocketIO, there has to be many checks in place so that one user cannot call a post from another
+    //Many times we check to see if the current session username matches the one that the target slot has.
     if (chipWager <= chipBalance && slotUsername === sessionAcctData.username) {
         let inverseValue = parseInt(chipWager, 10);
         inverseValue = -inverseValue;
@@ -177,32 +196,37 @@ const handlePot = async (e) => {
     }
 }
 
+
+//This is the slot DOM 
 const SlotDOM = (props) => {
     const slotNodes = props.slots.map(slot => {
         return (
             <form id={slot.username}
-                className="slots"
+                className="slots tile is-vertical"
                 key={slot._id}
                 onSubmit={handlePot}
                 name={slot._id}
                 action="/addToPot"
                 method="POST"
             >
+                <label id="intro">Username:</label>
                 <label id="username">{slot.username}</label>
-                <label htmlFor="wagerNum"> Chip Wager: </label>
-                <input id="chipWager" type="number" name="wagerNum" placeholder="Enter your selected wager here:" />
+                <label id = "chipLabel" htmlFor="wagerNum"> Chip Wager: </label>
+                <input id="chipWager" type="number" name="wagerNum" placeholder="Enter your wager here:" />
                 <input id="wagerButton" className="formSubmit" type="submit" value="Wager" />
             </form>
         )
     });
 
     return (
-        <div>
+        <div className = "tile">
             {slotNodes}
         </div>
     );
 }
 
+
+//This is a method that is called after a Socket emit, and disables users from wagering again until the game is over
 const updateSlots = (socketData) => {
 
     let selectedSlot = document.getElementById(socketData.updatedSlot);
@@ -215,18 +239,20 @@ const updateSlots = (socketData) => {
 
 }
 
-
+//This is a socket io method that calls for the lobby to be rendered again for all users
 const lobbyRender = (lobbyResponse) => {
     socket.emit('renderLobby', lobbyResponse);
 }
 
+
+//This renders the Lobby DOM
 const loadLobby = (lobbyResponse) => {
     ReactDOM.render(
-        <LobbyDOM globalPot={lobbyResponse.globalPot} />, document.getElementById('content')
+        <LobbyDOM globalPot={lobbyResponse.globalPot} />, document.getElementById('lobbyWrapper')
     );
 }
 
-
+//This is a helper method to get the username of the session account
 const getSessionAcctInfo = async () => {
     const acctResponse = await fetch('/getAcctInfo');
     const acctData = await acctResponse.json();
@@ -235,26 +261,55 @@ const getSessionAcctInfo = async () => {
 
 }
 
+
+//This method is simply updating the lobby again with the new slot lobby.
 const leaveLobby = async (slotData) => {
-    let chosenSlot = document.querySelector(`#${slotData.username}`);
-    chosenSlot.parentElement.removeChild(chosenSlot);
-}
-
-
-const leaveCurrentSlot = async () => {
-    let slotResponse = await fetch('/removeSlot');
-    let slotData = await slotResponse.json();
-    socket.emit('takeSlot', { username: slotData.username })
-}
-
-
-const loadSlots = async (response) => {
-    const slotResponse = await fetch('/getSlots');
-    const slotData = await slotResponse.json();
     ReactDOM.render(<SlotDOM slots={slotData.slots} />, document.getElementById('slotContainer'));
 }
 
 
+
+//This method is called when the user wants to leave the lobby, and also communicates with Socket so that all users
+//see that the player has left.
+const leaveCurrentSlot = async () => {
+    await fetch('/removeSlot');
+    let slotData = await getSlotObj();
+    socket.emit('takeSlot', slotData);
+}
+
+
+//This is a helper method to get the slot data
+const getSlotObj = async () => {
+    const slotResponse = await fetch('/getSlots');
+    const slotData = await slotResponse.json();
+    return slotData;
+}
+
+
+//This method is in charge of creating/loading the current lobby
+const setupLobby = async () => {
+    const lobbyResponse = await fetch('/getLobby');
+    const lobbyData = await lobbyResponse.json();
+    const token = await bringToken();
+    if (lobbyData.length < 1) {
+        helper.sendPost('/makeLobby', { startingPot: 0, _csrf: token }, loadLobby);
+    }
+    else {
+        loadLobby(lobbyData[0]);
+    }
+
+    let slots = await getSlotObj();
+    loadSlots(slots);
+
+}
+
+//This is in charge of loading the React DOM for the slots
+const loadSlots = async (slotData) => {
+    ReactDOM.render(<SlotDOM slots={slotData.slots} />, document.getElementById('slotContainer'));
+}
+
+//This method is in charge of setting up the Socket and Slot together. It first creates the slot,
+//then emits to Socket so that every user's DOM updates with that new slot
 const setupSlotSocket = async () => {
     const account = await fetch('/getAcctInfo');
     const acctData = await account.json();
@@ -263,41 +318,45 @@ const setupSlotSocket = async () => {
     let slotToken = await bringToken();
 
     helper.sendPost('/createSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
-    socket.emit('renderSlot', {});
-    //socket.emit('renderSlot', { username: sessionUsername, id: acctData.id, _csrf: slotToken });
+
+    let slotData = await getSlotObj();
+
+    socket.emit('renderSlot', slotData);
 }
 
-
+//This is the DOM for the lobby
 const LobbyDOM = (props) => {
     return (
         <div id="lobby">
-            <p>Global Pot:</p>
-            <div id="globalPot">{props.globalPot}</div>
-            <div id="slotWrapper">
-                <button id="joinLobby" onClick={(e) => {
-                    setupSlotSocket();
-                }}>Join this Lobby</button>
-
+            <section id="leaveAndPot" className = "tile">
                 <button id="leaveLobby" onClick={(e) => {
                     leaveCurrentSlot();
                 }}>Leave this Lobby</button>
-
-                <div id="slotContainer">
-
+                <div id="pot">
+                    <p id="countdown"></p>
+                    <p id="winner"></p>
+                    <p>Current Pot:</p>
+                    <div id="globalPot">{props.globalPot}</div>
+                    <img id="pileImg" src="./assets/img/pileofcoins.png" alt="pileofCoins" />
                 </div>
-                <p id="countdown"></p>
-                <p id="winner"></p>
-            </div>
+            </section>
+            <section id="slotWrapper" className = "tile">
+                <button id="joinLobby" onClick={(e) => {
+                    setupSlotSocket();
+                }}>+</button>
+                <div id="slotContainer"></div>
+
+            </section>
         </div>
     );
 }
-
+//This is the initial function which loads in the beginning, It is in charge of setting up all the 
+//Sockets and loads the lobby and session chip data for the user.
 const init = async () => {
     socket.on('sendUpdatedPot', loadLobby);
 
     socket.on('sendData', loadSlots);
 
-    //socket.on('sendNewSlot', renderSlot)
 
     socket.on('sendSlotData', updateSlots);
 

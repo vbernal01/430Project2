@@ -4,6 +4,9 @@ const AccountModel = require('../models/Account');
 
 const { Account } = models;
 
+// These few methods are in charge of handling the login and signup
+// information for the account.
+
 const loginPage = (req, res) => {
   res.render('login', { csrfToken: req.csrfToken() });
 };
@@ -59,6 +62,7 @@ const signup = async (req, res) => {
 };
 const makerPage = (req, res) => res.render('app');
 
+// The getToken and getChips get both data from the account model.
 const getToken = (req, res) => res.json({ csrfToken: req.csrfToken() });
 
 const getChips = (req, res) => {
@@ -73,15 +77,19 @@ const getChips = (req, res) => {
     return res.json({ chips: chipValue, username: sessionUsername });
   });
 };
-const addChips = async (req, res) => {
-  console.log(req.body);
 
+// This add chips method is in charge of adding or removing chips
+// from the specified user.
+const addChips = async (req, res) => {
   const addedValue = await AccountModel.setChips(req.body.sentUsername, req.body.chips);
   return res.json({ chipValue: addedValue, username: req.body.sentUsername });
 };
 
-const getAcctInfo = (req, res) => res.json({ username: req.session.account.username, id: req.session.account._id });
-
+// Another helper method
+const getAcctInfo = (req, res) => res.json({
+  username: req.session.account.username,
+  id: req.session.account._id,
+});
 module.exports = {
   loginPage,
   login,

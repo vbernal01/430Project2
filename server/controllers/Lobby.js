@@ -4,6 +4,11 @@ const LobbyModel = require('../models/Lobby');
 
 const { Lobby } = models;
 
+// This is a helper method to get the inverse sign of a number
+// When doing the send/remove action when the game ends, we need to subtract chips
+// from the lobby
+// Since the number that we are calling is a positive value, we need to
+// make it negative so we can remove that amount from the lobby pot
 const setInverse = (number) => {
   const sign = Math.sign(number);
 
@@ -14,6 +19,7 @@ const setInverse = (number) => {
   return Math.abs(number);
 };
 
+// This is where we handle the adding and subtracting of pot values
 const setLobbyPot = async (req, res) => {
   let { chips } = req.body;
   const orgValue = parseInt(chips, 10);
@@ -23,11 +29,14 @@ const setLobbyPot = async (req, res) => {
   return res.json({ globalPot: newGlobalPot });
 };
 
+// Helper method to get lobby
 const getCurrentLobby = async (req, res) => {
   const lobby = await LobbyModel.getLobby();
   return res.json(lobby);
 };
 
+// This is in charge of making a new Lobby Model, which should only happen once
+// in the server.
 const makeLobby = async (req, res) => {
   try {
     const newLobby = new Lobby({ globalPot: 0 });

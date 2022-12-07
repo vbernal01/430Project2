@@ -10,6 +10,7 @@ const LobbySchema = new mongoose.Schema({
   },
 });
 
+// This is in charge of setting the chips the lobby has
 LobbySchema.statics.setPot = async (chipValue) => {
   const lobby = await LobbyModel.find({});
 
@@ -24,6 +25,7 @@ LobbySchema.statics.setPot = async (chipValue) => {
   return newPotAmount;
 };
 
+// This is a helper method to get the lobby
 LobbySchema.statics.getLobby = async () => {
   const lobby = await LobbyModel.find({});
   return lobby;

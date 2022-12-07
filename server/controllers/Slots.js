@@ -4,16 +4,14 @@ const SlotModel = require('../models/Slots');
 
 const { Slots } = models;
 
+// This is in charge of making a new slot.
 const makeSlot = async (req, res) => {
   const slotData = {
     bindKey: req.body.id,
     username: req.body.username,
   };
 
-  // console.log(slotData);
   try {
-    // console.log('Session Username: '+ req.session.account.username);
-
     // If the current session mathces the slot we are trying to make:
     if (req.session.account.username === req.body.username) {
       // We check if it exists already
@@ -34,8 +32,11 @@ const makeSlot = async (req, res) => {
     }
     return res.status(400).json({ error: 'An error has occured' });
   }
+
+  return res.json({ message: 'esLint' });
 };
 
+// This method is in charge of removing the specified slot from the database
 const removeSlot = async (req, res) => {
   const sessionUsername = req.session.account.username;
   try {
@@ -47,6 +48,7 @@ const removeSlot = async (req, res) => {
   return res.json({ username: req.session.account.username });
 };
 
+// This is a method to get all the slots
 const getSlots = async (req, res) => {
   SlotModel.find({}, (err, docs) => {
     if (err) {

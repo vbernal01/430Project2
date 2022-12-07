@@ -1,5 +1,7 @@
 const helper = require('./helper.js');
 
+
+//This is in charge of the login
 const handleLogin = (e) => {
     e.preventDefault();
 
@@ -17,6 +19,8 @@ const handleLogin = (e) => {
     return false;
 };
 
+
+//This handles the signup
 const handleSignup = (e) => {
     e.preventDefault();
 
@@ -40,6 +44,8 @@ const handleSignup = (e) => {
     return false;
 };
 
+
+//This is the login window that pops up for reoccuring users
 const LoginWindow = (props) => {
     return (
         <form id="loginForm"
@@ -58,6 +64,8 @@ const LoginWindow = (props) => {
         </form>
     );
 }
+
+//This is the signupDOM to show for new users
 const SignupWindow = (props) => {
     return (
         <form id="signupForm"
@@ -79,6 +87,8 @@ const SignupWindow = (props) => {
     );
 }
 
+
+//This init funciton simply renders all the React DOMS from above.
 const init = async () => {
     const response = await fetch('/getToken');
     const data = await response.json();
